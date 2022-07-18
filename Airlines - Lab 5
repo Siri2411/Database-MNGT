@@ -1,0 +1,62 @@
+drop database airlines;
+create database airlines;
+use airlines; 
+create table flights( FLNO integer primary key, ffrom varchar(15) not null, tto varchar(15) not null, distance integer, departs timestamp, arrives timestamp);
+desc flights;
+create table aircraft( AID integer primary key, ANAME  varchar(10), cruisingrange integer);
+desc aircraft;
+create table employees( EID integer primary key, Ename varchar(15));
+desc employees;
+create table certified( EID integer not null, AID integer not null, primary key(EID, AID), foreign key(EID) references employees(EID), foreign key(AID) references aircraft(AID));
+desc certified;
+commit;
+
+insert into aircraft values(101,'747',3000);
+insert into aircraft values(102,'boeing',900);
+insert into aircraft values(103,'647',800);
+insert into aircraft values(104,'DreamLiner',10000);
+insert into aircraft values(105,'Boeing',3500);
+insert into aircraft values(106,'707',1500);
+insert into aircraft values(107,'Dream',120000);
+
+insert into employees values(701,'A');
+insert into employees values(702,'B');
+insert into employees values(703,'C');
+insert into employees values(704,'D');
+insert into employees values(705,'E');
+insert into employees values(706,'F');
+insert into employees values(707,'G');
+
+insert into certified values(701,'101');
+insert into certified values(702,'102');
+insert into certified values(703,'106');
+insert into certified values(702,'105');
+insert into certified values(703,'104');
+insert into certified values(704,'104');
+insert into certified values(704,'107');
+insert into certified values(702,'101');
+insert into certified values(703,'105');
+insert into certified values(704,'105');
+insert into certified values(705,'103');
+commit;
+
+/*alter session set nls_timestamp_format = 'RR/MM/DD HH24:MI:SSXFF';*/
+
+insert into flights values(101,'Bangkok','Paris', 43620, '2022-07-13 17:15:31', '2022-07-15 20:16:30');
+insert into flights values(102,'Dubai','London', 360977, '2012-08-05 18:25:33', '2012-08-06 22:13:54');
+insert into flights values(103,'Frankfurt','Rome', 22065, '2021-10-29 11:11:11', '2021-10-29 15:25:20');
+insert into flights values(104,'London','New York City', 560038, '2023-12-25 20:22:32', '2023-12-26 13:15:20');
+insert into flights values(105,'California','Nevada', 4362, '2022-02-14 18:02:31', '2022-02-14 21:29:31');
+insert into flights values(106,'Singapore','Australia', 67890, '2010-04-11 15:25:12', '2010-04-12 17:20:01');
+
+select*from aircraft;
+select*from certified;
+select*from employees;
+
+select distinct A.aname from aircraft A where A.AID IN (select C.AID from certified C, employees E where C.EID = E.EID And not exists (select* from employees E1 where E1.EID = E.EID));
+select C.EID, MAX(A.crusingrange) from certified C, aircraft a where c.aid = a.aid group by c.eid having count(*)>3;
+select distinct E.ename from employees E where salary<(select min(f.price) from flights f where f.ffrom = 'Bangkok' and f.tto = 'Paris');
+select temp.name, temp.avgsalary from (select A.aid, a.aname AS name, AVG(E.salary) AS avgsalary from aircraft A, certified C, Employees E where A.aid = c.aid and c.eid = e.eid and a.cruisingrange>1000 group by a.aid,a.aname) temp;
+select distinct e.ename from employees e, certified c, aircraft a where e.eid = c.eid and c.aid = a.aid and a.aname like 'boeing%';
+select a.aid from aircraft a where a.crusingrange >( select Min(f.distance) from flights f where f.ffrom = 'Bangkok' and f.tto = 'Paris');
+select f.departs from flights f where f.flno IN (( select f0.flno from flights f0 where f0.ffrom = 'Bangkok' and f0.tto = 'Paris' and extract(hour from f0.arrives)<18) Union (select f0.fl)
